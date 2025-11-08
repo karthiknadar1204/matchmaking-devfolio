@@ -11,7 +11,7 @@ Query: "${query}"
 Old Plan: ${JSON.stringify(oldPlan)}
 Feedback: "${feedback}"
 
-Improve the plan. ONLY use these fields:
+Improve the plan. ONLY use these fields: 
 - keywords: string[]
 - requiredSkills: string[]
 - minExperience: number | null

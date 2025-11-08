@@ -1,11 +1,11 @@
-// utils/logger.js
+
 import { logQueue } from '../queues/logQueue.js';
 
 export async function logAgentActivity(data) {
   const logData = {
     query: data.query || 'unknown',
     plan: {
-      text: JSON.stringify(data.plan || {}), // ← REQUIRED
+      text: JSON.stringify(data.plan || {}), 
       structured: data.plan || {}
     },
     retriever: {
@@ -15,7 +15,7 @@ export async function logAgentActivity(data) {
     },
     evaluator: {
       confidence: data.evaluator?.confidence ?? 0,
-      feedback: data.evaluator?.feedback || 'No feedback', // ← REQUIRED
+      feedback: data.evaluator?.feedback || 'No feedback', 
       explanations: data.evaluator?.explanations || {}
     },
     refiner: data.refiner || null,
