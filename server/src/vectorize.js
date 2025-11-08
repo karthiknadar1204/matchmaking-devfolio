@@ -19,7 +19,7 @@ const db = drizzle(sql);
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-const index = pinecone.Index('dev2');
+const index = pinecone.Index('dev3');
 
 async function embedBuilder(profile) {
   const text = `

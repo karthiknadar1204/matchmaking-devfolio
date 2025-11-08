@@ -1,15 +1,6 @@
 import openai from '../utils/openai.js';
 export async function EvaluatorAgent(query, candidates, history = [], plan = {}) {
 
-  if (plan.location) {
-    const userLoc = plan.location.toLowerCase();
-    candidates = candidates.filter(c => {
-      if (!c.location) return false;
-      const metaLoc = c.location.toLowerCase();
-      return metaLoc.includes(userLoc) || userLoc.includes(metaLoc.split(',')[0].trim());
-    });
-  }
-
   if (plan.requiredSkills?.length > 0) {
     candidates = candidates.filter(c => 
       plan.requiredSkills.every(req => 
