@@ -14,7 +14,6 @@ export async function PlannerAgent(query, history = []) {
   {
     "keywords": string[],
     "requiredSkills": string[],
-    "preferredTraits": string[],
     "hackathonTypes": string[],
     "minExperience": number | null,
     "availability": string | null

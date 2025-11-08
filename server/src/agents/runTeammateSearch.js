@@ -26,31 +26,51 @@
 //   }
 
 // agents/runTeammateSearch.js
+// agents/runTeammateSearch.js
 import { PlannerAgent } from "./planner.js";
 import { RetrieverAgent } from "./retriever.js";
 import { EvaluatorAgent } from "./evaluator.js";
 import { RefinerAgent } from "./refiner.js";
 
 export async function runTeammateSearch(query, history = []) {
-  const plan = await PlannerAgent(query, history);
-  console.log("Plan:", plan);
+  let currentPlan = await PlannerAgent(query, history);
+  console.log("Plan:", currentPlan);
 
-  const results = await RetrieverAgent(plan);
-  console.log(`Retrieved ${results.length} candidates`);
+  let currentResults = [];
+  let confidence = 0;
+  let attempts = 0;
+  const MAX_ATTEMPTS = 5;
 
-  const evaluation = await EvaluatorAgent(query, results, history);
-  console.log("Evaluator:", evaluation);
+  while (confidence < 0.8 && attempts < MAX_ATTEMPTS) {
+    attempts++;
+    console.log(`\n--- Attempt ${attempts} ---`);
 
-    if (evaluation.confidence <=0.8 && results.length > 0) {
-        const refinedPlan = await RefinerAgent(query, plan, evaluation.feedback, history);
-        console.log("Refined Plan:", refinedPlan);
-        const refinedResults = await RetrieverAgent(refinedPlan);
-        console.log("Refined Results:", refinedResults);
-        console.log(`Refined ${refinedResults.length} candidates`);
+    // 1. RETRIEVE FIRST
+    currentResults = await RetrieverAgent(currentPlan);
+    console.log(`Retrieved ${currentResults.length} candidates`);
+
+    // 2. EVALUATE
+    const evaluation = await EvaluatorAgent(query, currentResults, history);
+    confidence = evaluation.confidence;
+    console.log("Confidence:", confidence);
+
+    if (confidence >= 0.8) {
+      console.log("Success: Confidence ≥ 0.8");
+      break;
+    }
+
+    console.log("Feedback:", evaluation.feedback);
+
+    // 3. REFINE
+    currentPlan = await RefinerAgent(query, currentPlan, evaluation.feedback, history);
+    console.log("Refined Plan:", currentPlan);
   }
 
   return {
-    plan,
-    results
+    plan: currentPlan,
+    results: currentResults,
+    confidence,
+    attempts,
+    final: confidence >= 0.8 ? "SUCCESS" : "FAILED"
   };
 }
