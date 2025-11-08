@@ -1,4 +1,4 @@
-import openai from '../config/openai';
+import openai from '../utils/openai.js';
 
 export async function RefinerAgent(query, oldPlan, feedback, history = []) {
     const context = history.length > 0

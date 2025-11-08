@@ -28,6 +28,7 @@ export async function RetrieverAgent(plan) {
     id: parseInt(m.id),
     name: m.metadata.name,
     headline: m.metadata.headline,
+    location: m.metadata.location,
     experienceYears: m.metadata.experienceYears,
     availability: m.metadata.availability,
     skills: m.metadata.skills || [],

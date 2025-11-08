@@ -29,6 +29,7 @@
 import { PlannerAgent } from "./planner.js";
 import { RetrieverAgent } from "./retriever.js";
 import { EvaluatorAgent } from "./evaluator.js";
+import { RefinerAgent } from "./refiner.js";
 
 export async function runTeammateSearch(query, history = []) {
   const plan = await PlannerAgent(query, history);
@@ -39,6 +40,14 @@ export async function runTeammateSearch(query, history = []) {
 
   const evaluation = await EvaluatorAgent(query, results, history);
   console.log("Evaluator:", evaluation);
+
+    if (evaluation.confidence <=0.8 && results.length > 0) {
+        const refinedPlan = await RefinerAgent(query, plan, evaluation.feedback, history);
+        console.log("Refined Plan:", refinedPlan);
+        const refinedResults = await RetrieverAgent(refinedPlan);
+        console.log("Refined Results:", refinedResults);
+        console.log(`Refined ${refinedResults.length} candidates`);
+  }
 
   return {
     plan,

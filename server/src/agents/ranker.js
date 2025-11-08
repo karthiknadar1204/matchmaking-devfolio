@@ -1,4 +1,4 @@
-import openai from '../config/openai';
+import openai from '../utils/openai.js';
 
 export async function RankerAgent(candidates, query) {
     if (candidates.length === 0) return [];
