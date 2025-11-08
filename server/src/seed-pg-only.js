@@ -1,4 +1,4 @@
-// src/seed-pg-only.ts
+// ai generated script for seeding the database
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
@@ -15,9 +15,6 @@ import {
 const sql = neon(process.env.DATABASE_URL);
 const db = drizzle(sql);
 
-// ========================================
-// 1. FULL 50 BUILDER PROFILES (NO `as const`!)
-// ========================================
 const rawBuilders = [
   {
     name: "Aria Patel",
@@ -347,9 +344,6 @@ const rawBuilders = [
   }
 ];
 
-// ========================================
-// 2. SEED SCRIPT (FIXED)
-// ========================================
 async function seed() {
   console.log('Starting PostgreSQL seed...');
 
@@ -360,13 +354,11 @@ async function seed() {
     b.traits.forEach(t => uniqTraits.add(t));
   });
 
-  // Insert skills
   const skillRows = await db.insert(skills)
     .values(Array.from(uniqSkills).map(name => ({ name })))
     .onConflictDoNothing()
     .returning({ id: skills.id, name: skills.name });
 
-  // Insert traits
   const traitRows = await db.insert(traits)
     .values(Array.from(uniqTraits).map(name => ({ name })))
     .onConflictDoNothing()
@@ -376,7 +368,6 @@ async function seed() {
   const traitMap = new Map(traitRows.map(r => [r.name, r.id]));
 
   for (const b of rawBuilders) {
-    // Insert builder
     const [builder] = await db.insert(builders).values({
       name: b.name,
       headline: b.headline,
@@ -389,25 +380,22 @@ async function seed() {
 
     const builderId = builder.id;
 
-    // Insert preferences
     await db.insert(preferences).values({
       builderId,
       hackathonTypes: b.preferences.hackathonTypes,
       preferredRoles: b.preferences.preferredRoles,
     }).onConflictDoNothing();
 
-    // Insert projects
     for (const p of b.projects) {
       await db.insert(projects).values({
         builderId,
         name: p.name,
         description: p.description,
-        techStack: p.techStack,  // Now mutable string[]
+        techStack: p.techStack,
         role: p.role,
       }).onConflictDoNothing();
     }
 
-    // Insert skills
     const skillValues = b.skills.map(s => ({
       builderId,
       skillId: skillMap.get(s),
@@ -416,7 +404,6 @@ async function seed() {
       await db.insert(builderSkills).values(skillValues).onConflictDoNothing();
     }
 
-    // Insert traits
     const traitValues = b.traits.map(t => ({
       builderId,
       traitId: traitMap.get(t),
