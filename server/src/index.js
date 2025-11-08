@@ -1,4 +1,4 @@
-// index.js
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -61,9 +61,9 @@ app.post('/ask', async (req, res) => {
         skills: r.skills,
         github: r.github,
         linkedin: r.linkedin,
-        vectorScore: r.vectorScore.toFixed(3),
+        vectorScore: typeof r.vectorScore === 'number' ? r.vectorScore.toFixed(3) : null,
         matchScore: r.matchScore,
-        totalScore: r.totalScore.toFixed(3)
+        totalScore: typeof r.totalScore === 'number' ? r.totalScore.toFixed(3) : null
       }))
     });
   } catch (error) {

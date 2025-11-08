@@ -9,7 +9,7 @@ import {
   builderTraits,
   skills,
   traits,
-} from './config/schema/index';
+} from './config/schema/index.js';
 import { eq, inArray } from 'drizzle-orm';
 import { OpenAI } from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
@@ -19,8 +19,7 @@ const db = drizzle(sql);
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-const index = pinecone.Index('devfolio');
-
+const index = pinecone.Index('dev2');
 
 async function embedBuilder(profile) {
   const text = `
@@ -116,6 +115,8 @@ async function vectorize() {
           location: profile.location,
           experienceYears: profile.experienceYears,
           availability: profile.availability,
+          skills: profile.skills,  // ← ADDED
+          techStack: profile.projects.flatMap(p => p.techStack)  // ← ADDED
         },
       },
     ]);

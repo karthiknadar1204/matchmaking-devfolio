@@ -3,6 +3,6 @@ import { Pinecone } from '@pinecone-database/pinecone';
 const pc = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY,
 });
-const index = pc.index('devfolio');
+const index = pc.index('dev2');
 
 export default index;
