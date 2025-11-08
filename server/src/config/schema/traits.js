@@ -1,5 +1,5 @@
 import { pgTable, serial, varchar, integer } from "drizzle-orm/pg-core";
-import { builders } from "./builders";
+import { builders } from "./builders.js";
 
 export const traits = pgTable("traits", {
   id: serial("id").primaryKey(),

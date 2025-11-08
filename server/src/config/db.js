@@ -5,5 +5,5 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const sql = neon(process.env.DATABASE_URL as string);
-export const db = drizzle(sql,{schema: schema as any});
+const sql = neon(process.env.DATABASE_URL);
+export const db = drizzle(sql,{schema: schema});
