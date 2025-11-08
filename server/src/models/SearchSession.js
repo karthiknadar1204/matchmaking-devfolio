@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-
 const searchSessionSchema = new mongoose.Schema({
-  userId: { type: String, required: false },
+  sessionId: { type: String, required: true, unique: true },
   query: { type: String, required: true },
   startTime: { type: Date, default: Date.now },
   endTime: { type: Date },
@@ -9,8 +8,7 @@ const searchSessionSchema = new mongoose.Schema({
   finalConfidence: { type: Number, default: 0 },
   improvementDelta: { type: Number, default: 0 },
   bestResults: { type: [String], default: [] },
-  agentLogs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AgentLog' }],
+  agentLogIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AgentLog' }],
 });
 
-const SearchSession = mongoose.model('SearchSession', searchSessionSchema);
-export default SearchSession;
+export default mongoose.model('SearchSession', searchSessionSchema);

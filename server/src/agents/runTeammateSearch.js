@@ -3,6 +3,7 @@ import { RetrieverAgent } from "./retriever.js";
 import { EvaluatorAgent } from "./evaluator.js";
 import { RefinerAgent } from "./refiner.js";
 import { RankerAgent } from "./ranker.js";
+import { logAgentActivity } from "../utils/logger.js";
 
 export async function runTeammateSearch(query, history = []) {
   let currentPlan = await PlannerAgent(query, history);
@@ -23,15 +24,29 @@ export async function runTeammateSearch(query, history = []) {
     confidence = evaluation.confidence;
     console.log("Confidence:", confidence);
 
-    if (confidence >= 0.8) {
+
+    await logAgentActivity({
+      query,
+      plan: currentPlan,
+      retriever: { strategy: 'vector+post', results: currentResults.map(r => r.id) },
+      evaluator: { confidence, feedback: evaluation.feedback },
+      iterations: attempts,
+    });
+
+    let refinedPlan = null;
+
+    if (confidence < 0.8) {
+      console.log("Feedback:", evaluation.feedback);
+      refinedPlan = await RefinerAgent(query, currentPlan, evaluation.feedback, history);
+      currentPlan = refinedPlan;
+      console.log("Refined Plan:", currentPlan);
+    } else {
       console.log("Success: Confidence ≥ 0.8");
-      break;
     }
 
-    console.log("Feedback:", evaluation.feedback);
-
-    currentPlan = await RefinerAgent(query, currentPlan, evaluation.feedback, history);
-    console.log("Refined Plan:", currentPlan);
+    if (confidence >= 0.8) {
+      break;
+    }
   }
    const ranked = await RankerAgent(currentResults.slice(0, 10), query);
    console.log("Ranked:", ranked);
