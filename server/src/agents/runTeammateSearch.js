@@ -1,11 +1,20 @@
+import { randomUUID } from "crypto";
 import { PlannerAgent } from "./planner.js";
 import { RetrieverAgent } from "./retriever.js";
 import { EvaluatorAgent } from "./evaluator.js";
 import { RefinerAgent } from "./refiner.js";
 import { RankerAgent } from "./ranker.js";
 import { logAgentActivity } from "../utils/logger.js";
+import SearchSession from "../models/SearchSession.js";
 
 export async function runTeammateSearch(query, history = []) {
+  const sessionId = randomUUID();
+  await SearchSession.create({
+    sessionId,
+    query,
+    startTime: new Date(),
+  });
+
   let currentPlan = await PlannerAgent(query, history);
   console.log("Plan:", currentPlan);
 
@@ -25,11 +34,18 @@ export async function runTeammateSearch(query, history = []) {
     console.log("Confidence:", confidence);
 
 
+    const planSnapshot = {
+      text: JSON.stringify(currentPlan),
+      structured: currentPlan,
+    };
+
     await logAgentActivity({
       query,
-      plan: currentPlan,
-      retriever: { strategy: 'vector+post', results: currentResults.map(r => r.id) },
+      sessionId,
+      plan: planSnapshot,
+      retriever: { strategy: "vector+post", results: currentResults.map((r) => r.id) },
       evaluator: { confidence, feedback: evaluation.feedback },
+      finalConfidence: confidence,
       iterations: attempts,
     });
 
@@ -52,7 +68,20 @@ export async function runTeammateSearch(query, history = []) {
    console.log("Ranked:", ranked);
    const results = ranked.map(r => r.profile);
    console.log("Results:", results);
+
+  await SearchSession.findOneAndUpdate(
+    { sessionId },
+    {
+      endTime: new Date(),
+      totalIterations: attempts,
+      finalConfidence: confidence,
+      improvementDelta: confidence,
+      bestResults: results.map((r) => r?.id ?? r?._id ?? null).filter(Boolean),
+    }
+  );
+
   return {
+    sessionId,
     plan: currentPlan,
     results: results,
     confidence,

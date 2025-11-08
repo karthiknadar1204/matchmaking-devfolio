@@ -36,6 +36,7 @@ const metricsSchema = new mongoose.Schema({
 }, { _id: false });
 
 const agentLogSchema = new mongoose.Schema({
+  sessionId: { type: String, required: true, index: true },
   query: { type: String, required: true },
   plan: { type: planSchema, required: true },
   retriever: { type: retrieverSchema, required: true },
