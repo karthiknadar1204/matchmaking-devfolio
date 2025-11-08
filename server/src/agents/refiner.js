@@ -29,14 +29,23 @@ Respond ONLY in JSON.
     response_format: { type: 'json_object' }
   });
 
-  const refined = JSON.parse(res.choices[0].message.content);
+  let refined;
+  try {
+    refined = JSON.parse(res.choices[0].message.content);
+  } catch (parseError) {
+    console.warn('RefinerAgent JSON parse failed, returning old plan:', parseError);
+    return { ...oldPlan };
+  }
 
+  if (!refined || typeof refined !== 'object') {
+    return { ...oldPlan };
+  }
 
   return {
-    keywords: Array.isArray(refined.keywords) ? refined.keywords : oldPlan.keywords || [],
-    requiredSkills: Array.isArray(refined.requiredSkills) ? refined.requiredSkills : oldPlan.requiredSkills || [],
-    minExperience: typeof refined.minExperience === 'number' ? refined.minExperience : oldPlan.minExperience,
-    location: typeof refined.location === 'string' ? refined.location : oldPlan.location,
-    availability: typeof refined.availability === 'string' ? refined.availability : oldPlan.availability
+    keywords: Array.isArray(refined.keywords) ? refined.keywords : Array.isArray(oldPlan.keywords) ? oldPlan.keywords : [],
+    requiredSkills: Array.isArray(refined.requiredSkills) ? refined.requiredSkills : Array.isArray(oldPlan.requiredSkills) ? oldPlan.requiredSkills : [],
+    minExperience: typeof refined.minExperience === 'number' ? refined.minExperience : oldPlan.minExperience ?? null,
+    location: typeof refined.location === 'string' || refined.location === null ? refined.location : oldPlan.location ?? null,
+    availability: typeof refined.availability === 'string' || refined.availability === null ? refined.availability : oldPlan.availability ?? null
   };
 }
