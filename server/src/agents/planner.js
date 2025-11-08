@@ -16,8 +16,10 @@ export async function PlannerAgent(query, history = []) {
     "requiredSkills": string[],
     "hackathonTypes": string[],
     "minExperience": number | null,
-    "availability": string | null
+    "availability": string | null,
+    "location": string | null
   }
+  Use null when availability, location, or experience are not specified.
   `;
   
     const res = await openai.chat.completions.create({

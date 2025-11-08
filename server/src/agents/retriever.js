@@ -1,8 +1,9 @@
-
+// src/agents/retriever.js
 import openai from '../utils/openai.js';
 import index from '../utils/pinecone.js';
 
 export async function RetrieverAgent(plan) {
+  // 1. Embed only keywords + requiredSkills
   const searchTerms = [...plan.requiredSkills, ...plan.keywords].join(' ');
 
   const qEmbed = await openai.embeddings.create({
@@ -10,20 +11,23 @@ export async function RetrieverAgent(plan) {
     input: searchTerms
   }).then(r => r.data[0].embedding);
 
-
+  // 2. ONLY LIGHT FILTER: Experience
   const filter = {};
-  if (plan.minExperience) filter.experienceYears = { $gte: plan.minExperience };
+  if (plan.minExperience) {
+    filter.experienceYears = { $gte: plan.minExperience };
+  }
 
   console.log("filter", filter);
 
+  // 3. BROAD SEARCH
   const results = await index.query({
     vector: qEmbed,
-    topK: 5,
+    topK: 50,  // ← WIDE NET
     includeMetadata: true,
     filter: Object.keys(filter).length > 0 ? filter : undefined
   });
 
-  console.log("results", results);
+  // 4. Return RAW candidates
   return results.matches.map(m => ({
     id: parseInt(m.id),
     name: m.metadata.name,
@@ -32,7 +36,6 @@ export async function RetrieverAgent(plan) {
     experienceYears: m.metadata.experienceYears,
     availability: m.metadata.availability,
     skills: m.metadata.skills || [],
-    techStack: m.metadata.techStack || [],
     vectorScore: m.score
   }));
 }

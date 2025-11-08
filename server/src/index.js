@@ -42,8 +42,9 @@ app.post('/ask', async (req, res) => {
 
     const result = await runTeammateSearch(query, conversationHistory.slice(0, -1));
 
+    const topMatch = result.results[0];
     const assistantMessage = result.results.length > 0
-      ? `Found ${result.results.length} teammate(s). Top match: ${result.results[0].name}`
+      ? `Found ${result.results.length} teammate(s). Top match: ${topMatch.name} (${topMatch.location || 'location unknown'})`
       : "No teammates found. Try refining your query.";
 
     conversationHistory.push({ role: 'assistant', content: assistantMessage });
