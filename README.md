@@ -146,3 +146,97 @@ graph LR
 **You don’t search. You discover.**
 
 --- 
+
+
+
+
+
+
+
+
+
+# **Trade-Offs & Optimization Strategy**  
+
+---
+
+## **What We Optimized For**
+
+| Priority | Why |
+|--------|-----|
+| **Speed & Latency** | User gets response in **<100ms** — **non-negotiable**. Background logging via BullMQ + Redis. |
+| **Accuracy & Relevance** | **No false positives**. Must have **all required skills** + **exact location** (if specified). |
+| **Self-Improvement** | Agent **refines itself** until confidence ≥ 0.8. No manual tuning. |
+| **Observability** | Every step logged in MongoDB. Full audit trail for debugging, analytics, and future AI training. |
+| **Simplicity & Maintainability** | **No traits, no fluff**. Only 5 plan fields. Easy to extend. |
+
+---
+
+## **What We Did NOT Build (And Why)**
+
+| Feature | Why Not? |
+|-------|--------|
+| **Geolocation (Vicinity Search)** | **Not needed**. Hackathons are **in-person or remote** — not "within 50km". If user says "Mumbai", they mean **Mumbai**, not Pune. Adding geolocation adds **complexity, cost, and false matches**. |
+| **"Willing to Relocate" Filter** | **Not in data**. We can't ask candidates. If user wants it, they say *"open to relocation"* → becomes a keyword. |
+| **Traits (team player, innovative)** | **Unmeasurable noise**. "Everyone is a team player." **Skills > labels**. |
+| **Hackathon Type Matching** | **Too niche**. Most users care about **skills + location**, not "FinTech hackathon". |
+
+---
+
+## **Why Geolocation is a Bad Idea Here**
+
+```text
+User: "need dev in Mumbai"
+→ Geolocation: "Pune is 150km away → include"
+→ Result: Candidate in Pune, can't attend
+→ User angry
+```
+
+**Hackathons are location-specific.**  
+**"Nearby" ≠ "available"**.
+
+We **prioritize precision over recall**.
+
+---
+
+## **What YOU Optimized For**
+
+| You Did | Why It’s Smart |
+|-------|---------------|
+| **Broad vector search** | Finds *similar* people fast |
+| **Post-filtering in JS** | Enforces **"has all"** logic |
+| **Refiner constrained** | Prevents LLM from adding junk |
+| **Background logging** | Full insight, zero latency |
+
+---
+
+## **Precision vs Recall Trade-Off**
+
+| Metric | Our Choice |
+|-------|-----------|
+| **Precision** | High — **no wrong matches** |
+| **Recall** | Medium — might miss someone, but **never lies** |
+
+> **Better to say "no one found" than show the wrong person.**
+
+---
+
+## **Future Extensions (If Needed)**
+
+| Feature | How to Add |
+|-------|----------|
+| **Geolocation** | Add `lat/lng` to builders → use `$geoWithin` in MongoDB |
+| **Relocation Willingness** | Add field to profile → filter in Evaluator |
+| **Skill Synonyms** | Pre-map `"JS"` → `"JavaScript"` in Planner |
+| **User Feedback Loop** | Let users say "not relevant" → retrain Refiner |
+
+---
+
+## **Final Verdict**
+
+> **We built a sniper, not a shotgun.**  
+>  
+> **Fast. Accurate. Self-correcting. Observable.**  
+>  
+
+---
+
