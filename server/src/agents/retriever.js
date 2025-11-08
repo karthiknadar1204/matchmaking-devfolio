@@ -126,14 +126,25 @@ export async function RetrieverAgent(plan) {
     filter: Object.keys(filter).length > 0 ? filter : undefined
   });
 
+  const applyLocationFilter = (list) =>
+    locationMatchedIds
+      ? list.filter((m) => locationMatchedIds.has(parseInt(m.id, 10)))
+      : list;
+
+  const applySkillFilter = (list) =>
+    skillMatchedIds
+      ? list.filter((m) => skillMatchedIds.has(parseInt(m.id, 10)))
+      : list;
+
   let matches = results.matches;
+  matches = applySkillFilter(applyLocationFilter(matches));
 
-  if (locationMatchedIds) {
-    matches = matches.filter((m) => locationMatchedIds.has(parseInt(m.id, 10)));
-  }
-
-  if (skillMatchedIds) {
-    matches = matches.filter((m) => skillMatchedIds.has(parseInt(m.id, 10)));
+  if (matches.length === 0 && locationMatchedIds) {
+    const locationOnlyMatches = applyLocationFilter(results.matches);
+    if (locationOnlyMatches.length > 0) {
+      console.log('[RetrieverAgent] Falling back to location-only matches');
+      matches = locationOnlyMatches;
+    }
   }
 
   return matches.map(m => ({
