@@ -9,6 +9,9 @@ const searchSessionSchema = new mongoose.Schema({
   improvementDelta: { type: Number, default: 0 },
   bestResults: { type: [String], default: [] },
   agentLogIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AgentLog' }],
+  metrics: {
+    latencyMs: { type: Number, default: 0 },
+  },
 });
 
 export default mongoose.model('SearchSession', searchSessionSchema);

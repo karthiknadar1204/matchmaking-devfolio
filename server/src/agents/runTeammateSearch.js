@@ -15,6 +15,7 @@ export async function runTeammateSearch(query, history = []) {
     startTime: new Date(),
   });
 
+  const searchStart = Date.now();
   let currentPlan = await PlannerAgent(query, history);
   console.log("Plan:", currentPlan);
 
@@ -24,6 +25,7 @@ export async function runTeammateSearch(query, history = []) {
   const MAX_ATTEMPTS = 5;
 
   while (confidence < 0.8 && attempts < MAX_ATTEMPTS) {
+    const iterationStart = Date.now();
     attempts++;
 
     currentResults = await RetrieverAgent(currentPlan);
@@ -33,21 +35,6 @@ export async function runTeammateSearch(query, history = []) {
     confidence = evaluation.confidence;
     console.log("Confidence:", confidence);
 
-
-    const planSnapshot = {
-      text: JSON.stringify(currentPlan),
-      structured: currentPlan,
-    };
-
-    await logAgentActivity({
-      query,
-      sessionId,
-      plan: planSnapshot,
-      retriever: { strategy: "vector+post", results: currentResults.map((r) => r.id) },
-      evaluator: { confidence, feedback: evaluation.feedback },
-      finalConfidence: confidence,
-      iterations: attempts,
-    });
 
     let refinedPlan = null;
 
@@ -60,14 +47,66 @@ export async function runTeammateSearch(query, history = []) {
       console.log("Success: Confidence ≥ 0.8");
     }
 
+    const planSnapshot = {
+      text: JSON.stringify(currentPlan),
+      structured: currentPlan,
+    };
+
+    const latencyMs = Date.now() - iterationStart;
+
+    await logAgentActivity({
+      query,
+      sessionId,
+      plan: planSnapshot,
+      retriever: { strategy: "vector+post", results: currentResults.map((r) => r.id) },
+      evaluator: { confidence, feedback: evaluation.feedback },
+      refiner: refinedPlan
+        ? {
+            refinementReason: evaluation.feedback,
+            newPlan: refinedPlan,
+          }
+        : null,
+      metrics: { latencyMs },
+      finalConfidence: confidence,
+      iterations: attempts,
+    });
+
     if (confidence >= 0.8) {
       break;
     }
   }
-   const ranked = await RankerAgent(currentResults.slice(0, 10), query);
-   console.log("Ranked:", ranked);
-   const results = ranked.map(r => r.profile);
-   console.log("Results:", results);
+  const ranked = await RankerAgent(currentResults.slice(0, 10), query);
+  console.log("Ranked:", ranked);
+  const results = ranked.map(r => r.profile);
+  console.log("Results:", results);
+  const totalLatency = Date.now() - searchStart;
+
+  await logAgentActivity({
+    query,
+    sessionId,
+    plan: {
+      text: JSON.stringify(currentPlan),
+      structured: currentPlan,
+    },
+    retriever: { strategy: "vector+post", results: currentResults.map((r) => r.id) },
+    evaluator: { confidence, feedback: "Final ranking completed" },
+    refiner: null,
+    ranker: {
+      rankedResults: ranked
+        .map((item) => item.profile?.id ?? item.profile?._id ?? null)
+        .filter(Boolean),
+      relevanceScores: ranked.reduce((acc, item) => {
+        const id = item.profile?.id ?? item.profile?._id;
+        if (id) {
+          acc[id] = item.totalScore ?? item.matchScore ?? item.vectorScore ?? null;
+        }
+        return acc;
+      }, {}),
+    },
+    metrics: { latencyMs: totalLatency },
+    finalConfidence: confidence,
+    iterations: attempts,
+  });
 
   await SearchSession.findOneAndUpdate(
     { sessionId },
@@ -77,6 +116,7 @@ export async function runTeammateSearch(query, history = []) {
       finalConfidence: confidence,
       improvementDelta: confidence,
       bestResults: results.map((r) => r?.id ?? r?._id ?? null).filter(Boolean),
+      metrics: { latencyMs: totalLatency },
     }
   );
 
