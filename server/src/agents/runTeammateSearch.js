@@ -28,6 +28,7 @@
 // agents/runTeammateSearch.js
 import { PlannerAgent } from "./planner.js";
 import { RetrieverAgent } from "./retriever.js";
+import { EvaluatorAgent } from "./evaluator.js";
 
 export async function runTeammateSearch(query, history = []) {
   const plan = await PlannerAgent(query, history);
@@ -35,6 +36,9 @@ export async function runTeammateSearch(query, history = []) {
 
   const results = await RetrieverAgent(plan);
   console.log(`Retrieved ${results.length} candidates`);
+
+  const evaluation = await EvaluatorAgent(query, results, history);
+  console.log("Evaluator:", evaluation);
 
   return {
     plan,

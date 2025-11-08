@@ -1,4 +1,4 @@
-import openai from '../config/openai';
+import openai from '../utils/openai.js';
 
 export async function EvaluatorAgent(query, candidates, history = []) {
     if (candidates.length === 0) {
