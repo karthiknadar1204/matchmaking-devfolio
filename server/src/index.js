@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import "./config/mongoClient";
+import "./config/mongoClient.js";
 
 dotenv.config();
 
@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Hello from TypeScript + Express!' });
+app.get('/', (req, res) => {
+  res.json({ message: 'hellow world' });
 });
 
 app.listen(PORT, () => {
