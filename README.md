@@ -149,6 +149,7 @@ PINECONE_API_KEY='pcsk_64bw4_Mw6nhP7MrawTADPZUdk4n76KvZR6kcQ9Ejse2i2xbKnh7hopEhU
 OPENAI_API_KEY='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'
 REDIS_URL=redis://localhost:6379
 ```
+openai api key might need to be re generated as it gets auto disabled when exposed,rest dbs you can check via dbeaver or beekeeper studio
 
 > **Already seeded + vectorized** — just run!
 
