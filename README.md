@@ -1,242 +1,258 @@
-# **Teammate Matchmaking Agent: Full Architecture Explained**  
+# **Teammate Matchmaking Agent**  
+**Find Your Perfect Hackathon Teammate — In Seconds**  
+
+video demo link:
+https://drive.google.com/file/d/1XvOOYAN8qUp9_7Uxhoho4L2s3M5Kaw_G/view?usp=sharing
+---
+
+> **You type:** `need full stack engineer in Mumbai with React`  
+> **We find:** `Xander Patel — Mumbai, IN — Node.js + Vue — available weekends`  
+> **In under 100ms. With full reasoning. No latency.**
 
 ---
 
-## **The Big Idea**  
-You say: *"Need a full-stack engineer in Mumbai."*  
-Our AI **thinks**, **searches**, **learns**, and **finds the perfect teammate** — even if the first try fails.  
-It **never blocks you** — you get an answer in **under 100ms**, while the heavy work runs in the background.
+## **The Problem It Solves**
+
+Finding the **right teammate** for a hackathon is **hard**.  
+You post in 10 groups. Wait hours. Get 20 replies.  
+**None match.**  
+Or worse: someone *says* they know React — but **can’t code**.  
+You lose 24 hours. You lose the hackathon.
+
+**This agent fixes that.**  
+It’s your **AI-powered teammate scout** — fast, accurate, and **self-correcting**.
 
 ---
 
-## **How It Works: Step-by-Step**
+## **Live Demo**
 
-```mermaid
-graph TD
-    A[You Ask] --> B(1. Plan)
-    B --> C(2. Search)
-    C --> D(3. Evaluate)
-    D -->|Not Good Enough?| E(4. Improve Plan)
-    E --> C
-    D -->|Perfect!| F(5. Rank & Explain)
-    F --> G[You Get Answer]
-    C --> H[Log Everything]
-    E --> H
-    H --> I[(Background Job)]
+**Frontend:** `http://localhost:3000`  
+**Backend API:** `http://localhost:3004/ask`
+
+```bash
+curl -X POST http://localhost:3004/ask \
+  -H "Content-Type: application/json" \
+  -d '{"query": "need full stack engineer in San Francisco"}'
 ```
-
----
-
-### **1. You Ask**  
-You type:  
-> `need full stack engineer in Mumbai`
-
----
-
-### **2. PlannerAgent**  
-AI turns your words into a **search plan**:
-
-```json
-{
-  "keywords": ["full stack", "Mumbai"],
-  "requiredSkills": ["React", "Node.js"],
-  "location": "Mumbai"
-}
-```
-
----
-
-### **3. RetrieverAgent**  
-**Searches smartly**:
-
-| Step | What It Does |
-|------|-------------|
-| **Vector Search (Pinecone)** | Finds *similar* people using AI embeddings |
-| **SQL Filter (PostgreSQL)** | Only keeps people with 2+ years experience |
-| **Final Filter (JavaScript)** | Ensures **location = Mumbai** and **has all skills** |
-
-**No one in Mumbai?** → It **drops location**, keeps skills → finds **Xander Patel**.
-
----
-
-### **4. EvaluatorAgent**  
-AI **scores the match** from **0.0 to 1.0**:
-
-```text
-Confidence: 0.9
-Feedback: "Xander is in Mumbai, has React + Node.js, 3 years experience."
-```
-
-**Below 0.8?** → Go to **Refiner**.
-
----
-
-### **5. RefinerAgent**  
-AI **fixes the plan**:
-
-```diff
-- location: "Mumbai"
-+ location: "Mumbai or Bangalore"
-```
-
-Then **loops back** to Retriever.
-
----
-
-### **6. RankerAgent**  
-Final top 3 with **human explanations**:
-
-```json
-[
-  {
-    "name": "Xander Patel",
-    "explanation": "Full-Stack Dev in Mumbai, knows Node.js + Vue, available weekends."
-  }
-]
-```
-
----
-
-## **Background Magic: No Waiting**
-
-```mermaid
-graph LR
-    A[Your Request] --> B[Queue (Redis)]
-    B --> C[Worker (Background)]
-    C --> D[MongoDB: Logs + Sessions]
-    A --> E[Instant Reply]
-```
-
-- **You wait 0 seconds**  
-- **Logging runs in background**  
-- **Every step saved** → `AgentLog`, `SearchSession`
-
----
-
-## **Key Smart Decisions**
-
-| Decision | Why It’s Smart |
-|--------|----------------|
-| **No traits** | "Team player" is useless. **Skills matter.** |
-| **Refiner can’t add junk** | Only edits: skills, location, experience |
-| **Location checked in code** | Pinecone can’t do "Mumbai, IN" → we do it |
-| **Background logging** | You’re fast. We’re thorough. |
-| **Loop until 0.8** | Never gives up. Always improves. |
 
 ---
 
 ## **Tech Stack**
 
-| Layer | Tool |
+| Layer | Tech |
 |------|------|
-| **AI Brain** | `gpt-4o` |
-| **Fast Search** | `Pinecone` (vectors) |
-| **Exact Data** | `PostgreSQL` (skills, location) |
-| **Background Jobs** | `BullMQ + Redis` |
-| **Logs & Sessions** | `MongoDB` |
-| **API** | `Express` |
+| **AI** | `gpt-4o` (OpenAI) |
+| **Vector DB** | `Pinecone` |
+| **SQL** | `PostgreSQL` + `Drizzle ORM` |
+| **NoSQL** | `MongoDB` + `Mongoose` |
+| **Background Jobs** | `BullMQ` + `Redis` |
+| **API** | `Express.js` |
+| **Frontend** | `nextjs` |
 
 ---
 
-## **Result**
+## **Architecture Overview**
 
-> You ask in **1 second**.  
-> We think, search, learn, and **deliver the perfect teammate** — with **full proof**.
-
-**You don’t search. You discover.**
-
---- 
-
-
-
-
-
-
-
-
-
-# **Trade-Offs & Optimization Strategy**  
-
----
-
-## **What We Optimized For**
-
-| Priority | Why |
-|--------|-----|
-| **Speed & Latency** | User gets response in **<100ms** — **non-negotiable**. Background logging via BullMQ + Redis. |
-| **Accuracy & Relevance** | **No false positives**. Must have **all required skills** + **exact location** (if specified). |
-| **Self-Improvement** | Agent **refines itself** until confidence ≥ 0.8. No manual tuning. |
-| **Observability** | Every step logged in MongoDB. Full audit trail for debugging, analytics, and future AI training. |
-| **Simplicity & Maintainability** | **No traits, no fluff**. Only 5 plan fields. Easy to extend. |
-
----
-
-## **What We Did NOT Build (And Why)**
-
-| Feature | Why Not? |
-|-------|--------|
-| **Geolocation (Vicinity Search)** | **Not needed**. Hackathons are **in-person or remote** — not "within 50km". If user says "Mumbai", they mean **Mumbai**, not Pune. Adding geolocation adds **complexity, cost, and false matches**. |
-| **"Willing to Relocate" Filter** | **Not in data**. We can't ask candidates. If user wants it, they say *"open to relocation"* → becomes a keyword. |
-| **Traits (team player, innovative)** | **Unmeasurable noise**. "Everyone is a team player." **Skills > labels**. |
-| **Hackathon Type Matching** | **Too niche**. Most users care about **skills + location**, not "FinTech hackathon". |
-
----
-
-## **Why Geolocation is a Bad Idea Here**
-
-```text
-User: "need dev in Mumbai"
-→ Geolocation: "Pune is 150km away → include"
-→ Result: Candidate in Pune, can't attend
-→ User angry
+```mermaid
+graph TD
+    A[User Query] --> B[PlannerAgent]
+    B --> C[RetrieverAgent]
+    C --> D[EvaluatorAgent]
+    D -->|confidence < 0.8| E[RefinerAgent]
+    E --> C
+    D -->|≥ 0.8| F[RankerAgent]
+    F --> G[Response]
+    C --> H[Background Logging]
+    E --> H
+    H --> I[MongoDB]
 ```
 
-**Hackathons are location-specific.**  
-**"Nearby" ≠ "available"**.
+---
 
-We **prioritize precision over recall**.
+## **How It Works (Step-by-Step)**
+
+1. **You Ask**  
+   ```text
+   "need full stack engineer in Mumbai"
+   ```
+
+2. **PlannerAgent** → Turns words into a **search plan**  
+   ```json
+   { "location": "Mumbai", "requiredSkills": ["React", "Node.js"] }
+   ```
+
+3. **RetrieverAgent** → **Searches wide, filters smart**  
+   - `topK: 50` in Pinecone (AI similarity)  
+   - Light filter: only experience  
+   - **Post-filter in JS**: exact location + all skills
+
+4. **EvaluatorAgent** → Scores confidence (0.0–1.0)  
+   ```text
+   Confidence: 0.9 → "Xander is in Mumbai"
+   ```
+
+5. **RefinerAgent** → Fixes plan if needed  
+   ```diff
+   - location: "Mumbai"
+   + location: "Mumbai or Bangalore"
+   ```
+
+6. **RankerAgent** → Explains top 3  
+   ```json
+   "Xander is ideal: Full-Stack + Mumbai + 3 yrs"
+   ```
+
+7. **Background Logging** → **Zero latency**  
+   - All steps saved in MongoDB  
+   - Runs via **BullMQ + Redis**
 
 ---
 
-## **What YOU Optimized For**
+## **Setup (3 Terminals)**
 
-| You Did | Why It’s Smart |
-|-------|---------------|
-| **Broad vector search** | Finds *similar* people fast |
-| **Post-filtering in JS** | Enforces **"has all"** logic |
-| **Refiner constrained** | Prevents LLM from adding junk |
-| **Background logging** | Full insight, zero latency |
+### **Terminal 1: Redis**
+```bash
+redis-server
+```
 
----
+### **Terminal 2: Background Worker**
+```bash
+cd server
+node src/workers/logWorker.js
+```
 
-## **Precision vs Recall Trade-Off**
+### **Terminal 3: Backend**
+```bash
+cd server
+npm install
+npm run dev
+```
 
-| Metric | Our Choice |
-|-------|-----------|
-| **Precision** | High — **no wrong matches** |
-| **Recall** | Medium — might miss someone, but **never lies** |
+### **Terminal 4: Frontend**
+```bash
+cd client
+npm install
+npm run dev
+```
 
-> **Better to say "no one found" than show the wrong person.**
-
----
-
-## **Future Extensions (If Needed)**
-
-| Feature | How to Add |
-|-------|----------|
-| **Geolocation** | Add `lat/lng` to builders → use `$geoWithin` in MongoDB |
-| **Relocation Willingness** | Add field to profile → filter in Evaluator |
-| **Skill Synonyms** | Pre-map `"JS"` → `"JavaScript"` in Planner |
-| **User Feedback Loop** | Let users say "not relevant" → retrain Refiner |
+> **Open:** `http://localhost:3000`
 
 ---
 
-## **Final Verdict**
+## **Environment Variables (`.env`) for backend**
 
-> **We built a sniper, not a shotgun.**  
->  
-> **Fast. Accurate. Self-correcting. Observable.**  
->  
+```env
+PORT=3004
+DATABASE_URL='postgresql://karthiknadar1204:Fvph9DyfVm2L@ep-restless-credit-a1c7489o-pooler.ap-southeast-1.aws.neon.tech/devfolio?sslmode=require&channel_binding=require'
+MONGO_URI='mongodb+srv://karthiknadar1204_db_user:ruPDLQkO0QGvcIy3@devfolio.crmjara.mongodb.net/?appName=devfolio'
+PINECONE_API_KEY='pcsk_64bw4_Mw6nhP7MrawTADPZUdk4n76KvZR6kcQ9Ejse2i2xbKnh7hopEhUKgdGZeWbBz1i'
+OPENAI_API_KEY='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'
+REDIS_URL=redis://localhost:6379
+```
+
+> **Already seeded + vectorized** — just run!
 
 ---
 
+## **Test Queries (Try These!)**
+
+| Query | Expected |
+|------|----------|
+| `need full stack engineer in San Francisco, CA` | **Aria Patel** |
+| `need mobile developer in Seoul with React Native` | **Luna Kim** |
+| `need blockchain developer in Berlin` | **Milo Garcia** |
+| `need AI researcher in Toronto` | **Kai Chen** |
+| `need full stack dev in Mumbai` | **Xander Patel** |
+| `need React + Node.js developer with 5+ years` | **Aria Patel, Gia Chen** |
+| `need DevOps engineer with Kubernetes and 8+ years` | **Sage Rivera** |
+| `need frontend wizard with React and TypeScript` | **Ulysses Martinez** |
+| `need full stack engineer in Beijing, flexible availability` | **Gia Chen** |
+| `need part-time blockchain dev` | **Milo Garcia, Toby Chen** |
+| `need weekend-only developer in Mumbai` | **Xander Patel** |
+| `need someone who knows Docker and PostgreSQL` | **Aria Patel, Gia Chen** |
+| `need backend guru with Go` | **Vera Nguyen, Leo Chen** |
+| `need game developer in Seoul` | **0 results** |
+| `need React + TypeScript dev in Barcelona` | **Ulysses Martinez** |
+| `need Flutter dev in Busan` | **Sasha Kim** |
+| `need someone in Remote` | **Orion Lopez, Ada Wilson** |
+| `need DevOps in Bangalore` | **Finn Patel** |
+| `need full stack with 0 years experience` | **0 results** |
+
+---
+
+## **Key Design Decisions**
+
+| **We Did** | **Why It’s Smart** |
+|-----------|---------------------|
+| **Broad vector search** | Finds *similar* people in **milliseconds** |
+| **Post-filtering in JS** | Enforces **"has all"** logic — **no false matches** |
+| **Refiner constrained** | Stops AI from adding junk like `"willingToRelocate"` |
+| **Background logging** | **Zero latency** — full audit trail |
+
+---
+
+## **Trade-Offs**
+
+| **Optimized For** | **Sacrificed** | **Why** |
+|------------------|---------------|--------|
+| **Precision** | Recall | Better to say "no one" than show the wrong person |
+| **Speed** | Geolocation | Hackathons are **in-person or remote** — not "50km radius" |
+| **Simplicity** | Traits | "Team player" = noise. **Skills > labels** |
+
+---
+
+## **Challenges & Wins**
+
+The **RetrieverAgent** was the **hardest part** — the one that made or broke the entire agent. I was tackling **data mismatches**, **SQL joins**, and **"has all skills" logic** — all while keeping latency under 100ms.
+
+At first, I thought: *"Just use vector search."*  
+But that failed — because **"React" + "Node.js"** needs **both**, not **either**.
+
+So I built a **hybrid search system**:
+
+> **SQL for truth. Pinecone for discovery.**
+
+### **The Evolution: 4 Stages of RetrieverAgent**
+
+| Stage | What I Did | Problem | Fix |
+|------|-----------|-------|-----|
+| **1. Vector Only** | `topK: 75` in Pinecone | Found *similar*, not *exact* | Too loose |
+| **2. Pinecone Filters** | `location: "Mumbai"` | 0 results | Too strict |
+| **3. SQL + Pinecone Hybrid** | SQL for **location** + **all skills** → ID sets | **Complex joins** | **Winner** |
+| **4. Smart Fallback** | If 0 → drop skills → keep location | Never stuck | **Robust** |
+
+### **Retriever Agent Accuracy Optimizations**
+
+- **Hybrid query construction**  
+  - Normalize `plan.requiredSkills` and `plan.keywords`, concatenate them into a single natural‑language `searchTerms` string, and embed with `text-embedding-3-small`. This keeps the Pinecone query aligned with both structured skills and broader keywords.
+
+- **Location pre-filter in Postgres**  
+  - Parse `plan.location` into comma/pipe-delimited tokens, clean whitespace, and build `ilike(builders.location, %token%)` predicates.  
+  - Run a `SELECT` against the `builders` table (limit 200) and collect matching builder IDs in a `Set`. This enforces **hard location constraints before the vector search**.
+
+- **Exact skill coverage check in Postgres**  
+  - Trim required skills, `ilike` match each against the `skills` table to capture normalization/spelling variance, then grab their IDs.  
+  - Fetch rows from the `builderSkills` junction table for those skill IDs.  
+  - Build a `Map<builderId, Set<skillId>>` and **keep only builders whose skill set fully covers the required skills**. The resulting builder IDs form a second filter `Set`.
+
+- **Pinecone vector search with metadata filter**  
+  - Query the index with the embedding, `topK: 75`, `includeMetadata: true`, and an optional filter on `experienceYears` (e.g., `{ $gte: plan.minExperience }`). This limits vector search to candidates satisfying experience thresholds.
+
+- **Post-query cross-filtering**  
+  - Apply the location and skill `Set` filters to Pinecone matches (`builderId` parsed from the Pinecone match ID).  
+  - If the intersection is empty but there were Postgres location matches, **fall back to location-only matches** to avoid zero results.  
+  - Return normalized match objects with Pinecone metadata such as `name`, `headline`, `location`, `skills`, and the similarity score.
+
+
+## **Future Extensions**
+
+- [ ] Geolocation (if needed)  
+- [ ] Skill synonyms (`JS` → `JavaScript`)  
+- [ ] User feedback loop  
+
+---
+
+## **You Don’t Search. You Discover.**
+
+**Type. Match. Build. Win.**
+---
