@@ -200,6 +200,28 @@ openai api key might need to be re generated as it gets auto disabled when expos
 | **Speed** | Geolocation | Hackathons are **in-person or remote** — not "50km radius" |
 | **Simplicity** | Traits | "Team player" = noise. **Skills > labels** |
 
+**Things That Could Be Added (Future Roadmap)**
+
+- **Real-time Chat via WebSockets**  
+  Connect matched teammates instantly with a **built-in chat** using `Socket.IO`. No need to switch to WhatsApp or Slack. Users can discuss ideas, share code, and confirm availability — all within the app.  
+  → *“You matched with Xander — start chatting now.”*
+
+- **Hackathon-Specific Rooms (Multi-Tenant Sharding)**  
+  Instead of one global search, create **dedicated rooms per hackathon** (e.g., `devfolio-2025`, `hack-the-north`).  
+  - Filter teammates **only within the same event**.  
+  - Show **event timeline**, **themes**, and **prizes**.  
+  - Auto-expire rooms after the hackathon ends.  
+  → *“Join the Devfolio room — 47 hackers online, 12 need a React dev.”*
+
+- **Team Formation Dashboard**  
+  Let users **create/join teams**, see **team strength**, and **invite via link**.
+
+---
+
+**We started with discovery. Next: collaboration.**
+
+*From “find a teammate” → to “build together.”*
+
 ---
 
 ## **Challenges & Wins**
